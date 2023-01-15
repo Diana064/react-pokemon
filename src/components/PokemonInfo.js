@@ -2,53 +2,47 @@ import { Component } from 'react';
 import PokemonDataView from './PokemonDataView';
 import PokemonErrorView from './PokemonErrorView';
 import PokemonPendingView from './PokemonPendingView';
+import pokemonApi from './services/pokemon-api';
 
 export default class PokemonInfo extends Component {
   state = {
     pokemon: null,
-    status: 'idle',
     error: null,
+    status: 'idle',
   };
-
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.pokemonName !== this.props.pokemonName) {
+    const prevName = prevProps.pokemonInfo;
+    const nextName = this.props.pokemonInfo;
+
+    if (prevName !== nextName) {
       this.setState({ status: 'pending' });
-
-      setTimeout(() => {
-        fetch(`https://pokeapi.co/api/v2/pokemon/${this.props.pokemonName}`)
-          .then(res => {
-            if (res.ok) {
-              return res.json();
-            }
-
-            return Promise.reject(
-              new Error(`Нет покемона с именем "${this.props.pokemonName}".`),
-            );
-          })
-          .then(pokemon => this.setState({ pokemon, status: 'resolved' }))
-          .catch(error => this.setState({ error, status: 'rejected' }));
-      }, 1000);
+      pokemonApi
+        .fetchPokemon(nextName)
+        .then(pokemon => this.setState({ pokemon, status: 'resolved' }))
+        .catch(error => this.setState({ error, status: 'rejected' }));
     }
+    console.log(this.state.pokemon);
   }
-
+  //'idle'
+  //'pending'
+  //'resolve'
+  //'rejected'
   render() {
-    const { status, pokemon, error } = this.state;
+    const { pokemon, error, status } = this.state;
+    const { pokemonInfo } = this.props;
 
     switch (status) {
-      case 'idle':
-        return <h1>Введите имя покемона!</h1>;
+      case 'resolved':
+        return <PokemonDataView pokemon={pokemon} />;
 
       case 'pending':
-        return <PokemonPendingView pokemonName={this.props.pokemonName} />;
+        return <PokemonPendingView pokemonName={pokemonInfo} />;
 
       case 'rejected':
         return <PokemonErrorView message={error.message} />;
 
-      case 'resolved':
-        return <PokemonDataView pokemon={pokemon} />;
-
       default:
-        return null;
+        return <h1>Please enter Pokemon Name</h1>;
     }
   }
 }

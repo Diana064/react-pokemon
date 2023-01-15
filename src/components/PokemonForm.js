@@ -17,6 +17,8 @@ export default class PokemonForm extends Component {
     event.preventDefault();
 
     if (this.state.pokemonName.trim() === '') {
+      // alert('Please enter name of pokemon');
+      // return;
       return toast.error('Введите имя покемона!');
     }
 
